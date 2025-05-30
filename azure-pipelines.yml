@@ -1,0 +1,31 @@
+trigger:  
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  tfVersion: '1.6.6'
+
+steps:
+- task: JasonBJohnson.azure-pipelines-tasks-terraform.azure-pipelines-tasks-terraform-installer.TerraformInstaller@0
+  displayName: 'Install Terraform'
+  inputs:
+    terraformVersion: $(tfVersion)
+
+- task: AzureCLI@2
+  displayName: 'Login to Azure using workload identity federation'
+  inputs:
+    azureSubscription: 'azure-sub-conn'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      echo "Logged in successfully"
+      az account show
+
+- script: |
+    terraform init -reconfigure
+    terraform plan -var-file="terraform.tfvars"
+    terraform apply -auto-approve -var-file="terraform.tfvars"
+  displayName: 'Terraform Init, Plan, Apply'
+  workingDirectory: $(Build.SourcesDirectory)
