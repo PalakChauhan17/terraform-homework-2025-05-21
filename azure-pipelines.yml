@@ -1,4 +1,4 @@
-trigger:  
+trigger:
 - main
 
 pool:
@@ -14,6 +14,7 @@ steps:
     terraformVersion: $(tfVersion)
 
 - task: AzureCLI@2
+  name: AzureLogin
   displayName: 'Login to Azure using workload identity federation'
   inputs:
     azureSubscription: 'azure-sub-conn'
@@ -24,8 +25,17 @@ steps:
       az account show
 
 - script: |
+    echo "##vso[task.setvariable variable=ARM_CLIENT_ID]$(AZURE_CLIENT_ID)"
+    echo "##vso[task.setvariable variable=ARM_SUBSCRIPTION_ID]$(AZURE_SUBSCRIPTION_ID)"
+    echo "##vso[task.setvariable variable=ARM_TENANT_ID]$(AZURE_TENANT_ID)"
+  displayName: 'Export ARM_* env vars for Terraform'
+
+- script: |
     terraform init -reconfigure
     terraform plan -var-file="terraform.tfvars"
     terraform apply -auto-approve -var-file="terraform.tfvars"
   displayName: 'Terraform Init, Plan, Apply'
-  workingDirectory: $(Build.SourcesDirectory)
+  env:
+    ARM_CLIENT_ID: $(ARM_CLIENT_ID)
+    ARM_SUBSCRIPTION_ID: $(ARM_SUBSCRIPTION_ID)
+    ARM_TENANT_ID: $(ARM_TENANT_ID)
