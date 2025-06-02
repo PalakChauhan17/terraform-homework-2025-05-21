@@ -1,0 +1,29 @@
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  azureServiceConnection: 'YOUR-SERVICE-CONNECTION-NAME'
+  environment: 'dev'
+
+stages:
+- stage: Terraform
+  jobs:
+  - job: TerraformInitPlanApply
+    steps:
+
+    - task: AzureCLI@2
+      inputs:
+        azureSubscription: $(azureServiceConnection)
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+          az account show
+
+    - script: |
+        terraform init -reconfigure
+        terraform plan -out=tfplan
+        terraform apply -auto-approve tfplan
+      displayName: 'Terraform Init, Plan, Apply'
