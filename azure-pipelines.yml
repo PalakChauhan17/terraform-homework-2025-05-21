@@ -5,29 +5,43 @@ pool:
   vmImage: ubuntu-latest
 
 variables:
-  azureServiceConnection: 'azure-sub-conn'  # your Azure RM service connection name
+  azureServiceConnection: 'azure-sub-conn'  # Replace with your actual Azure RM service connection name
 
 stages:
 - stage: Terraform
   jobs:
   - job: TerraformInitPlanApply
     steps:
+
+    # Azure CLI login using the service connection
     - task: AzureCLI@2
       inputs:
         azureSubscription: $(azureServiceConnection)
         scriptType: bash
         scriptLocation: inlineScript
         inlineScript: |
+          echo "Showing Azure account info"
           az account show
+      displayName: 'Azure CLI Login'
 
-          sudo apt-get update
-          sudo apt-get install -y wget unzip
-          wget https://releases.hashicorp.com/terraform/1.5.6/terraform_1.5.6_linux_amd64.zip
-          unzip terraform_1.5.6_linux_amd64.zip
-          sudo mv terraform /usr/local/bin/
-          terraform version
+    # Install Terraform CLI
+    - script: |
+        sudo apt-get update
+        sudo apt-get install -y wget unzip
+        wget https://releases.hashicorp.com/terraform/1.5.6/terraform_1.5.6_linux_amd64.zip
+        unzip terraform_1.5.6_linux_amd64.zip
+        sudo mv terraform /usr/local/bin/
+        terraform version
+      displayName: 'Install Terraform'
 
-          terraform init -reconfigure
-          terraform plan -out=tfplan
-          terraform apply -auto-approve tfplan
-      displayName: 'Terraform Init, Plan, Apply'
+    # Run Terraform init with reconfigure
+    - script: terraform init -reconfigure
+      displayName: 'Terraform Init'
+
+    # Run Terraform plan and save to tfplan
+    - script: terraform plan -out=tfplan
+      displayName: 'Terraform Plan'
+
+    # Run Terraform apply with auto-approve
+    - script: terraform apply -auto-approve tfplan
+      displayName: 'Terraform Apply'
