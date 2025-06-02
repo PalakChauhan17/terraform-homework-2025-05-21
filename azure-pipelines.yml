@@ -12,7 +12,6 @@ stages:
   jobs:
   - job: TerraformInitPlanApply
     steps:
-
     - task: AzureCLI@2
       inputs:
         azureSubscription: $(azureServiceConnection)
@@ -20,25 +19,15 @@ stages:
         scriptLocation: inlineScript
         inlineScript: |
           az account show
-      displayName: 'Azure Account Info'
 
-    - script: |
-        sudo apt-get update
-        sudo apt-get install -y wget unzip
-        wget https://releases.hashicorp.com/terraform/1.5.6/terraform_1.5.6_linux_amd64.zip
-        unzip terraform_1.5.6_linux_amd64.zip
-        sudo mv terraform /usr/local/bin/
-        terraform version
-      displayName: 'Install Terraform'
+          sudo apt-get update
+          sudo apt-get install -y wget unzip
+          wget https://releases.hashicorp.com/terraform/1.5.6/terraform_1.5.6_linux_amd64.zip
+          unzip terraform_1.5.6_linux_amd64.zip
+          sudo mv terraform /usr/local/bin/
+          terraform version
 
-    - script: |
-        terraform init -reconfigure
-      displayName: 'Terraform Init'
-
-    - script: |
-        terraform plan -out=tfplan
-      displayName: 'Terraform Plan'
-
-    - script: |
-        terraform apply -auto-approve tfplan
-      displayName: 'Terraform Apply'
+          terraform init -reconfigure
+          terraform plan -out=tfplan
+          terraform apply -auto-approve tfplan
+      displayName: 'Terraform Init, Plan, Apply'
